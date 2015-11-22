@@ -123,12 +123,6 @@ public interface Constants extends Messages {
 
     String Refresh();
 
-    String AutoRefresh();
-
-    String RestoreDefaultFilters();
-
-    String Disable();
-
     String Tasks_Refreshed();
 
     String Add_User();
@@ -209,29 +203,44 @@ public interface Constants extends Messages {
 
     String Close();
 
-    String FilterManagement();
     String Created();
+
     String Ready();
+
     String Reserved();
+
     String InProgress();
+
     String Suspended();
+
     String Failed();
+
     String Error();
+
     String Exited();
+
     String Obsolete();
+
     String Completed();
 
     String TaskRole();
+
     String Initiator();
+
     String Stakeholder();
+
     String Potential_Owner();
+
     String Administrator();
 
     String Task_Form();
+
     String Task_Form_Name();
+
     String Task_Form_DeploymentId();
 
-    String New_TaskList();
+    String New_FilteredList();
 
     String Administrators();
+
 }

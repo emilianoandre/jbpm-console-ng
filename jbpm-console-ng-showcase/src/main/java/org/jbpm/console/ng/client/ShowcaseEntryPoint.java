@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import javax.inject.Inject;
 
 import com.google.gwt.animation.client.Animation;
@@ -28,28 +29,30 @@ import com.google.gwt.dom.client.Style;
 import com.google.gwt.i18n.client.LocaleInfo;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.RootPanel;
-import java.util.Map;
 import org.guvnor.common.services.shared.config.AppConfigService;
+import org.guvnor.common.services.shared.security.KieWorkbenchACL;
+import org.guvnor.common.services.shared.security.KieWorkbenchPolicy;
+import org.guvnor.common.services.shared.security.KieWorkbenchSecurityService;
 import org.jboss.errai.common.client.api.Caller;
 import org.jboss.errai.common.client.api.RemoteCallback;
 import org.jboss.errai.ioc.client.api.AfterInitialization;
 import org.jboss.errai.ioc.client.api.EntryPoint;
 import org.jboss.errai.ioc.client.container.IOCBeanDef;
 import org.jboss.errai.ioc.client.container.SyncBeanManager;
+import org.jboss.errai.security.shared.api.Group;
 import org.jboss.errai.security.shared.api.Role;
 import org.jboss.errai.security.shared.api.identity.User;
 import org.jbpm.console.ng.client.i18n.Constants;
-import org.kie.workbench.common.widgets.client.menu.WorkbenchConfigurationMenuBuilder;
-import org.jbpm.dashboard.renderer.service.DashboardURLBuilder;
-import org.guvnor.common.services.shared.security.KieWorkbenchACL;
-import org.guvnor.common.services.shared.security.KieWorkbenchPolicy;
-import org.kie.workbench.common.services.shared.preferences.ApplicationPreferences;
-import org.guvnor.common.services.shared.security.KieWorkbenchSecurityService;
-import org.jboss.errai.security.shared.api.Group;
 import org.jbpm.console.ng.ga.forms.service.PlaceManagerActivityService;
+import org.jbpm.dashboard.renderer.service.DashboardURLBuilder;
+import org.kie.workbench.common.services.shared.preferences.ApplicationPreferences;
+import org.kie.workbench.common.widgets.client.menu.WorkbenchConfigurationMenuBuilder;
 import org.uberfire.client.mvp.AbstractWorkbenchPerspectiveActivity;
 import org.uberfire.client.mvp.ActivityBeansCache;
 import org.uberfire.client.mvp.PlaceManager;
+import org.uberfire.client.workbench.docks.UberfireDock;
+import org.uberfire.client.workbench.docks.UberfireDockPosition;
+import org.uberfire.client.workbench.docks.UberfireDocks;
 import org.uberfire.client.workbench.widgets.menu.WorkbenchMenuBarPresenter;
 import org.uberfire.mvp.Command;
 import org.uberfire.mvp.impl.DefaultPlaceRequest;
@@ -200,7 +203,7 @@ public class ShowcaseEntryPoint {
     }
 
     private List<? extends MenuItem> getProcessMGMTViews() {
-        final List<MenuItem> result = new ArrayList<MenuItem>( 3 );
+        final List<MenuItem> result = new ArrayList<MenuItem>( 4 );
 
         result.add( MenuFactory.newSimpleItem( constants.Process_Definitions() ).respondsWith( new Command() {
             @Override
@@ -209,13 +212,20 @@ public class ShowcaseEntryPoint {
             }
         } ).endMenu().build().getItems().get( 0 ) );
 
-//        result.add( MenuFactory.newSimpleItem( constants.Process_Instances() ).respondsWith( new Command() {
-//            @Override
-//            public void execute() {
-//                placeManager.goTo( new DefaultPlaceRequest( "Process Instances" ) );
-//            }
-//        } ).endMenu().build().getItems().get( 0 ) );
-
+        result.add( MenuFactory.newSimpleItem( " Variables" ).respondsWith( new Command() {
+            @Override
+            public void execute() {
+                placeManager.goTo( new DefaultPlaceRequest( "DataSet Process Instances Variables" ) );
+            }
+        } ).endMenu().build().getItems().get( 0 ) );
+        
+        result.add( MenuFactory.newSimpleItem( "Process With Variables" ).respondsWith( new Command() {
+            @Override
+            public void execute() {
+                placeManager.goTo( new DefaultPlaceRequest( "DataSet Process Instances With Variables" ) );
+            }
+        } ).endMenu().build().getItems().get( 0 ) );
+        
         result.add( MenuFactory.newSimpleItem( constants.Process_Instances() ).respondsWith( new Command() {
             @Override
             public void execute() {

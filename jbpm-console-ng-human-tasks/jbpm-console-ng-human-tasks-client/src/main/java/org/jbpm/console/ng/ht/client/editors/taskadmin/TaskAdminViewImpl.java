@@ -16,18 +16,18 @@
 
 package org.jbpm.console.ng.ht.client.editors.taskadmin;
 
-import com.github.gwtbootstrap.client.ui.Button;
 import javax.enterprise.context.Dependent;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
 
-import com.github.gwtbootstrap.client.ui.ControlLabel;
-import com.github.gwtbootstrap.client.ui.Label;
-import com.github.gwtbootstrap.client.ui.TextBox;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.HTMLPanel;
+import org.gwtbootstrap3.client.ui.Button;
+import org.gwtbootstrap3.client.ui.FormControlStatic;
+import org.gwtbootstrap3.client.ui.FormLabel;
+import org.gwtbootstrap3.client.ui.Legend;
+import org.gwtbootstrap3.client.ui.TextBox;
 import org.jboss.errai.ui.shared.api.annotations.DataField;
 import org.jboss.errai.ui.shared.api.annotations.EventHandler;
 import org.jboss.errai.ui.shared.api.annotations.Templated;
@@ -39,44 +39,43 @@ import org.uberfire.workbench.events.NotificationEvent;
 public class TaskAdminViewImpl extends Composite implements TaskAdminPresenter.TaskAdminView {
 
     private TaskAdminPresenter presenter;
-    
-	@Inject
-    @DataField
-    public ControlLabel adminDetailsAccordionLabel;
-
 
     @Inject
     @DataField
-    public Label adminUserOrGroupLabel;
-    
+    public Legend adminDetailsAccordionLabel;
+
     @Inject
     @DataField
-    public Label adminUsersGroupsControlsLabel;
-    
+    public FormLabel adminUserOrGroupLabel;
+
+    @Inject
+    @DataField
+    public FormLabel adminUsersGroupsControlsLabel;
+
     @Inject
     @DataField
     public TextBox adminUserOrGroupText;
-    
+
     @Inject
     @DataField
     public Button adminForwardButton;
 
     @Inject
     @DataField
-    public Label adminUsersGroupsControlsPanel;
-  
+    public FormControlStatic adminUsersGroupsControlsPanel;
+
     @Inject
     @DataField
-    public ControlLabel reminderDetailsAccordionLabel;
-    
+    public Legend reminderDetailsAccordionLabel;
+
     @Inject
     @DataField
-    public Label actualOwnerLabel;
-    
+    public FormLabel actualOwnerLabel;
+
     @Inject
     @DataField
-    public Label actualOwnerPanel;
-    
+    public FormControlStatic actualOwnerPanel;
+
     @Inject
     @DataField
     public Button adminReminderButton;
@@ -89,36 +88,34 @@ public class TaskAdminViewImpl extends Composite implements TaskAdminPresenter.T
     @Override
     public void init( TaskAdminPresenter presenter ) {
         this.presenter = presenter;
-        adminUserOrGroupLabel.setText(constants.Delegate_User());
-        adminDetailsAccordionLabel.add( new HTMLPanel( constants.Details()) );
-        adminForwardButton.setText(constants.Forward());
-        adminUsersGroupsControlsLabel.setText(constants.Potential_Owners());
-        adminUsersGroupsControlsPanel.setStyleName("");
-        
-        reminderDetailsAccordionLabel.add( new HTMLPanel(constants.Reminder_Details() ));
-        actualOwnerLabel.setText(constants.Actual_Owner());
-        actualOwnerPanel.setStyleName("");
-        adminReminderButton.setText(constants.Reminder());
+        adminUserOrGroupLabel.setText( constants.Delegate_User() );
+        adminDetailsAccordionLabel.setText( constants.Details() );
+        adminForwardButton.setText( constants.Forward() );
+        adminUsersGroupsControlsLabel.setText( constants.Potential_Owners() );
+
+        reminderDetailsAccordionLabel.setText( constants.Reminder_Details() );
+        actualOwnerLabel.setText( constants.Actual_Owner() );
+        adminReminderButton.setText( constants.Reminder() );
     }
 
     @EventHandler("adminForwardButton")
     public void adminForwardButton( ClickEvent e ) {
         String userOrGroup = adminUserOrGroupText.getText();
-        if(!userOrGroup.equals("")){
-            presenter.forwardTask( userOrGroup);
-            adminForwardButton.setEnabled(false);
-        }else{
-            displayNotification("Please enter a user or a group to delegate the task");
+        if ( !userOrGroup.equals( "" ) ) {
+            presenter.forwardTask( userOrGroup );
+            adminForwardButton.setEnabled( false );
+        } else {
+            displayNotification( "Please enter a user or a group to delegate the task" );
         }
     }
 
     @EventHandler("adminReminderButton")
     public void adminReminderButton( ClickEvent e ) {
-            presenter.reminder();
+        presenter.reminder();
     }
-    
+
     @Override
-    public Label getUsersGroupsControlsPanel() {
+    public FormControlStatic getUsersGroupsControlsPanel() {
         return adminUsersGroupsControlsPanel;
     }
 
@@ -128,22 +125,22 @@ public class TaskAdminViewImpl extends Composite implements TaskAdminPresenter.T
     }
 
     @Override
-    public Button getForwardButton(){
+    public Button getForwardButton() {
         return adminForwardButton;
     }
-    
+
     @Override
     public TextBox getUserOrGroupText() {
         return adminUserOrGroupText;
     }
 
-	@Override
-	public Button getReminderButton() {
-		return adminReminderButton;
-	}
+    @Override
+    public Button getReminderButton() {
+        return adminReminderButton;
+    }
 
-	@Override
-	public Label getActualOwnerPanel() {
-		return actualOwnerPanel;
-	}
+    @Override
+    public FormControlStatic getActualOwnerPanel() {
+        return actualOwnerPanel;
+    }
 }

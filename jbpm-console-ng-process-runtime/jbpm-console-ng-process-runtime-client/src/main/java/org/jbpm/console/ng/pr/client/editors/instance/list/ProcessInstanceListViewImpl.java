@@ -15,30 +15,52 @@
  */
 package org.jbpm.console.ng.pr.client.editors.instance.list;
 
-import com.github.gwtbootstrap.client.ui.*;
-import com.github.gwtbootstrap.client.ui.Button;
-import com.github.gwtbootstrap.client.ui.constants.IconType;
-import com.google.gwt.cell.client.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import javax.enterprise.context.Dependent;
+import javax.enterprise.event.Event;
+import javax.enterprise.event.Observes;
+import javax.inject.Inject;
+
+import com.google.gwt.cell.client.ActionCell;
 import com.google.gwt.cell.client.ActionCell.Delegate;
+import com.google.gwt.cell.client.Cell;
+import com.google.gwt.cell.client.CheckboxCell;
+import com.google.gwt.cell.client.CompositeCell;
+import com.google.gwt.cell.client.FieldUpdater;
+import com.google.gwt.cell.client.HasCell;
+import com.google.gwt.cell.client.TextCell;
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.dom.client.*;
+import com.google.gwt.dom.client.BrowserEvents;
+import com.google.gwt.dom.client.InputElement;
+import com.google.gwt.dom.client.NativeEvent;
+import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
-import com.google.gwt.uibinder.client.UiBinder;
-
 import com.google.gwt.user.cellview.client.Column;
+import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.ui.*;
 import com.google.gwt.view.client.CellPreviewEvent;
 import com.google.gwt.view.client.DefaultSelectionEventManager;
 import com.google.gwt.view.client.NoSelectionModel;
 import com.google.gwt.view.client.SelectionChangeEvent;
+import org.gwtbootstrap3.client.ui.AnchorListItem;
+import org.gwtbootstrap3.client.ui.Button;
+import org.gwtbootstrap3.client.ui.ButtonGroup;
+import org.gwtbootstrap3.client.ui.DropDownMenu;
+import org.gwtbootstrap3.client.ui.constants.ButtonSize;
+import org.gwtbootstrap3.client.ui.constants.IconType;
+import org.gwtbootstrap3.client.ui.constants.Pull;
+import org.gwtbootstrap3.client.ui.constants.Toggle;
 import org.jbpm.console.ng.gc.client.experimental.grid.base.ExtendedPagedTable;
 import org.jbpm.console.ng.gc.client.list.base.AbstractMultiGridView;
 import org.jbpm.console.ng.pr.client.i18n.Constants;
+import org.jbpm.console.ng.pr.forms.client.editors.quicknewinstance.QuickNewProcessInstancePopup;
 import org.jbpm.console.ng.pr.model.ProcessInstanceSummary;
 import org.jbpm.console.ng.pr.model.events.ProcessInstanceSelectionEvent;
 import org.jbpm.console.ng.pr.model.events.ProcessInstancesWithDetailsRequestEvent;
@@ -46,32 +68,25 @@ import org.kie.api.runtime.process.ProcessInstance;
 import org.uberfire.client.mvp.PlaceStatus;
 import org.uberfire.client.workbench.events.BeforeClosePlaceEvent;
 import org.uberfire.ext.services.shared.preferences.GridGlobalPreferences;
-
 import org.uberfire.ext.widgets.common.client.tables.ColumnMeta;
 import org.uberfire.ext.widgets.common.client.tables.popup.NewTabFilterPopup;
 import org.uberfire.mvp.Command;
 import org.uberfire.mvp.PlaceRequest;
 import org.uberfire.mvp.impl.DefaultPlaceRequest;
 
-import javax.enterprise.context.Dependent;
-import javax.enterprise.event.Event;
-import javax.enterprise.event.Observes;
-import javax.inject.Inject;
-import java.util.*;
-import org.jbpm.console.ng.pr.forms.client.editors.quicknewinstance.QuickNewProcessInstancePopup;
-
-
 @Dependent
 public class ProcessInstanceListViewImpl extends AbstractMultiGridView<ProcessInstanceSummary, ProcessInstanceListPresenter>
         implements ProcessInstanceListPresenter.ProcessInstanceListView {
 
-    interface Binder
-            extends
-            UiBinder<Widget, ProcessInstanceListViewImpl> {
-
-    }
-
-    private static Binder uiBinder = GWT.create( Binder.class );
+    public static final String COL_ID_SELECT ="Select";
+    public static final String COL_ID_ACTIONS ="Actions";
+    public static final String COL_ID_PROCESSINSIID ="log.processInstanceId";
+    public static final String COL_ID_PROCESSNAME ="log.processName";
+    public static final String COL_ID_IDENTITY ="log.identity";
+    public static final String COL_ID_PROCESSVERSION ="log.processVersion";
+    public static final String COL_ID_START ="log.start";
+    public static final String COL_ID_DESCRIPTION ="log.processInstanceDescription";
+    public static final String COL_ID_STATUS ="log.status";
 
     private Constants constants = GWT.create( Constants.class );
 
@@ -85,39 +100,37 @@ public class ProcessInstanceListViewImpl extends AbstractMultiGridView<ProcessIn
 
     private Column actionsColumn;
 
-    private NavLink bulkAbortNavLink;
-    private NavLink bulkSignalNavLink;
+    private AnchorListItem bulkAbortNavLink;
+    private AnchorListItem bulkSignalNavLink;
 
     @Inject
     private QuickNewProcessInstancePopup newProcessInstancePopup;
 
-
     private void controlBulkOperations() {
         if ( selectedProcessInstances != null && selectedProcessInstances.size() > 0 ) {
-            bulkAbortNavLink.setDisabled( false );
-            bulkSignalNavLink.setDisabled( false );
+            bulkAbortNavLink.setEnabled( true );
+            bulkSignalNavLink.setEnabled( true );
         } else {
-            bulkAbortNavLink.setDisabled( true );
-            bulkSignalNavLink.setDisabled( true );
+            bulkAbortNavLink.setEnabled( false );
+            bulkSignalNavLink.setEnabled( false );
         }
     }
 
     @Override
     public void init( final ProcessInstanceListPresenter presenter ) {
         final List<String> bannedColumns = new ArrayList<String>();
-        bannedColumns.add( constants.Select() );
-        bannedColumns.add( constants.Id() );
-        bannedColumns.add( constants.Name() );
-        bannedColumns.add( constants.Process_Instance_Description() );
-        bannedColumns.add( constants.Actions() );
+        bannedColumns.add( COL_ID_SELECT );
+        bannedColumns.add( COL_ID_PROCESSINSIID );
+        bannedColumns.add( COL_ID_PROCESSNAME );
+        bannedColumns.add( COL_ID_DESCRIPTION );
+        bannedColumns.add( COL_ID_ACTIONS );
         final List<String> initColumns = new ArrayList<String>();
-        initColumns.add( constants.Select() );
-        initColumns.add( constants.Id() );
-        initColumns.add( constants.Name() );
-        initColumns.add( constants.Process_Instance_Description() );
-        initColumns.add( constants.Version() );
-        initColumns.add( constants.Actions() );
-        initColumns.add( constants.Version() );
+        initColumns.add( COL_ID_SELECT );
+        initColumns.add( COL_ID_PROCESSINSIID );
+        initColumns.add( COL_ID_PROCESSNAME );
+        initColumns.add( COL_ID_DESCRIPTION );
+        initColumns.add( COL_ID_PROCESSVERSION );
+        initColumns.add( COL_ID_ACTIONS );
 
         final Button button = new Button();
         button.setText( "+" );
@@ -126,21 +139,20 @@ public class ProcessInstanceListViewImpl extends AbstractMultiGridView<ProcessIn
                 Command addNewGrid = new Command() {
                     @Override
                     public void execute() {
-                        HashMap<String,Object> newTabFormValues = newTabFilterPopup.getFormValues();
-                        final String key = getValidKeyForAdditionalListGrid("ProcessInstancesGrid_");
+                        HashMap<String, Object> newTabFormValues = newTabFilterPopup.getFormValues();
+                        final String key = getValidKeyForAdditionalListGrid( "ProcessInstancesGrid_" );
                         filterPagedTable.saveNewTabSettings( key, newTabFormValues );
-                        final ExtendedPagedTable<ProcessInstanceSummary> extendedPagedTable = createGridInstance(  new GridGlobalPreferences( key, initColumns, bannedColumns ), key );
+                        final ExtendedPagedTable<ProcessInstanceSummary> extendedPagedTable = createGridInstance( new GridGlobalPreferences( key, initColumns, bannedColumns ), key );
 
-                        presenter.addDataDisplay( extendedPagedTable );
-                        extendedPagedTable.setDataProvider(presenter.getDataProvider() );
+                        extendedPagedTable.setDataProvider( presenter.getDataProvider() );
 
-                        filterPagedTable.createNewTab( extendedPagedTable, key, button,new Command() {
+                        filterPagedTable.createNewTab( extendedPagedTable, key, button, new Command() {
                             @Override
                             public void execute() {
                                 currentListGrid = extendedPagedTable;
                                 applyFilterOnPresenter( key );
                             }
-                        } ) ;
+                        } );
                         applyFilterOnPresenter( newTabFormValues );
 
                     }
@@ -151,12 +163,12 @@ public class ProcessInstanceListViewImpl extends AbstractMultiGridView<ProcessIn
             }
         } );
 
-        super.init( presenter, new GridGlobalPreferences( "ProcessInstancesGrid", initColumns, bannedColumns ),button );
+        super.init( presenter, new GridGlobalPreferences( "ProcessInstancesGrid", initColumns, bannedColumns ), button );
 
     }
 
     @Override
-    public void initSelectionModel (){
+    public void initSelectionModel() {
 
         final ExtendedPagedTable extendedPagedTable = getListGrid();
         extendedPagedTable.setEmptyTableCaption( constants.No_Process_Instances_Found() );
@@ -189,12 +201,12 @@ public class ProcessInstanceListViewImpl extends AbstractMultiGridView<ProcessIn
                 if ( status == PlaceStatus.CLOSE ) {
                     placeManager.goTo( "Process Instance Details Multi" );
                     processInstanceSelected.fire( new ProcessInstanceSelectionEvent( selectedItem.getDeploymentId(),
-                            selectedItem.getProcessInstanceId(), selectedItem.getProcessId(),
-                            selectedItem.getProcessName(), selectedItem.getState() ) );
+                                                                                     selectedItem.getProcessInstanceId(), selectedItem.getProcessId(),
+                                                                                     selectedItem.getProcessName(), selectedItem.getState() ) );
                 } else if ( status == PlaceStatus.OPEN && !close ) {
                     processInstanceSelected.fire( new ProcessInstanceSelectionEvent( selectedItem.getDeploymentId(),
-                            selectedItem.getProcessInstanceId(), selectedItem.getProcessId(),
-                            selectedItem.getProcessName(), selectedItem.getState() ) );
+                                                                                     selectedItem.getProcessInstanceId(), selectedItem.getProcessId(),
+                                                                                     selectedItem.getProcessName(), selectedItem.getState() ) );
                 } else if ( status == PlaceStatus.OPEN && close ) {
                     placeManager.closePlace( "Process Instance Details Multi" );
                 }
@@ -247,7 +259,7 @@ public class ProcessInstanceListViewImpl extends AbstractMultiGridView<ProcessIn
     }
 
     @Override
-    public void initColumns(ExtendedPagedTable<ProcessInstanceSummary> extendedPagedTable ) {
+    public void initColumns( ExtendedPagedTable<ProcessInstanceSummary> extendedPagedTable ) {
 
         Column checkColumn = initChecksColumn();
         Column processInstanceIdColumn = initProcessInstanceIdColumn();
@@ -272,8 +284,6 @@ public class ProcessInstanceListViewImpl extends AbstractMultiGridView<ProcessIn
         extendedPagedTable.addColumns( columnMetas );
     }
 
-
-
     private void createFilterForm() {
         HashMap<String, String> stateListBoxInfo = new HashMap<String, String>();
 
@@ -290,24 +300,37 @@ public class ProcessInstanceListViewImpl extends AbstractMultiGridView<ProcessIn
 
     }
 
-    public void initExtraButtons( final ExtendedPagedTable<ProcessInstanceSummary> extendedPagedTable ){
+    public void initExtraButtons( final ExtendedPagedTable<ProcessInstanceSummary> extendedPagedTable ) {
         Button newInstanceButton = new Button();
-        newInstanceButton.setTitle(constants.New_Instance());
-        newInstanceButton.setIcon( IconType.PLUS_SIGN );
+        newInstanceButton.setTitle( constants.New_Instance() );
+        newInstanceButton.setIcon( IconType.PLUS );
         newInstanceButton.setTitle( Constants.INSTANCE.New_Instance() );
-        newInstanceButton.addClickHandler(new ClickHandler() {
+        newInstanceButton.addClickHandler( new ClickHandler() {
             @Override
-            public void onClick(ClickEvent event) {
+            public void onClick( ClickEvent event ) {
                 newProcessInstancePopup.show();
             }
-        });
-        extendedPagedTable.getRightActionsToolbar().add(newInstanceButton);
+        } );
+        extendedPagedTable.getRightActionsToolbar().add( newInstanceButton );
     }
+
     private void initBulkActions( final ExtendedPagedTable<ProcessInstanceSummary> extendedPagedTable ) {
-        SplitDropdownButton bulkActions = new SplitDropdownButton();
-        bulkActions.setText( constants.Bulk_Actions() );
-        bulkAbortNavLink = new NavLink( constants.Bulk_Abort() );
-        bulkAbortNavLink.setIcon( IconType.REMOVE_SIGN );
+        bulkAbortNavLink = new AnchorListItem( constants.Bulk_Abort() );
+        bulkSignalNavLink = new AnchorListItem( constants.Bulk_Signal() );
+
+        final ButtonGroup bulkActions = new ButtonGroup() {{
+            add( new org.gwtbootstrap3.client.ui.Button( constants.Bulk_Actions() ) {{
+                setDataToggle( Toggle.DROPDOWN );
+            }} );
+            add( new DropDownMenu() {{
+                setPull( Pull.RIGHT );
+                add( bulkAbortNavLink );
+                add( bulkSignalNavLink );
+            }} );
+        }};
+
+        bulkAbortNavLink.setIcon( IconType.BAN );
+        bulkAbortNavLink.setIconFixedWidth( true );
         bulkAbortNavLink.addClickHandler( new ClickHandler() {
             @Override
             public void onClick( ClickEvent event ) {
@@ -317,8 +340,8 @@ public class ProcessInstanceListViewImpl extends AbstractMultiGridView<ProcessIn
             }
         } );
 
-        bulkSignalNavLink = new NavLink( constants.Bulk_Signal() );
         bulkSignalNavLink.setIcon( IconType.BELL );
+        bulkSignalNavLink.setIconFixedWidth( true );
         bulkSignalNavLink.addClickHandler( new ClickHandler() {
             @Override
             public void onClick( ClickEvent event ) {
@@ -327,9 +350,6 @@ public class ProcessInstanceListViewImpl extends AbstractMultiGridView<ProcessIn
                 extendedPagedTable.redraw();
             }
         } );
-
-        bulkActions.add( bulkAbortNavLink );
-        bulkActions.add( bulkSignalNavLink );
 
         extendedPagedTable.getRightActionsToolbar().add( bulkActions );
 
@@ -345,7 +365,7 @@ public class ProcessInstanceListViewImpl extends AbstractMultiGridView<ProcessIn
             }
         };
         processInstanceIdColumn.setSortable( true );
-        processInstanceIdColumn.setDataStoreName( "log.processInstanceId" );
+        processInstanceIdColumn.setDataStoreName( COL_ID_PROCESSINSIID );
 
         return processInstanceIdColumn;
     }
@@ -359,7 +379,7 @@ public class ProcessInstanceListViewImpl extends AbstractMultiGridView<ProcessIn
             }
         };
         processNameColumn.setSortable( true );
-        processNameColumn.setDataStoreName( "log.processName" );
+        processNameColumn.setDataStoreName( COL_ID_PROCESSNAME );
 
         return processNameColumn;
     }
@@ -373,7 +393,7 @@ public class ProcessInstanceListViewImpl extends AbstractMultiGridView<ProcessIn
             }
         };
         processInitiatorColumn.setSortable( true );
-        processInitiatorColumn.setDataStoreName( "log.identity" );
+        processInitiatorColumn.setDataStoreName( COL_ID_IDENTITY );
 
         return processInitiatorColumn;
     }
@@ -387,7 +407,7 @@ public class ProcessInstanceListViewImpl extends AbstractMultiGridView<ProcessIn
             }
         };
         processVersionColumn.setSortable( true );
-        processVersionColumn.setDataStoreName( "log.processVersion" );
+        processVersionColumn.setDataStoreName( COL_ID_PROCESSVERSION );
 
         return processVersionColumn;
     }
@@ -423,7 +443,7 @@ public class ProcessInstanceListViewImpl extends AbstractMultiGridView<ProcessIn
             }
         };
         processStateColumn.setSortable( true );
-        processStateColumn.setDataStoreName( "log.status" );
+        processStateColumn.setDataStoreName( COL_ID_STATUS );
 
         return processStateColumn;
     }
@@ -442,7 +462,7 @@ public class ProcessInstanceListViewImpl extends AbstractMultiGridView<ProcessIn
             }
         };
         startTimeColumn.setSortable( true );
-        startTimeColumn.setDataStoreName( "log.start" );
+        startTimeColumn.setDataStoreName(COL_ID_START );
 
         return startTimeColumn;
     }
@@ -478,6 +498,7 @@ public class ProcessInstanceListViewImpl extends AbstractMultiGridView<ProcessIn
                 return object;
             }
         };
+        actionsColumn.setDataStoreName(COL_ID_ACTIONS);
         return actionsColumn;
 
     }
@@ -494,7 +515,7 @@ public class ProcessInstanceListViewImpl extends AbstractMultiGridView<ProcessIn
                 return selectedProcessInstances.contains( object );
             }
         };
-
+        checkColumn.setDataStoreName(COL_ID_SELECT);
         return checkColumn;
     }
 
@@ -514,8 +535,8 @@ public class ProcessInstanceListViewImpl extends AbstractMultiGridView<ProcessIn
     public void onProcessInstanceSelectionEvent( @Observes ProcessInstancesWithDetailsRequestEvent event ) {
         placeManager.goTo( "Process Instance Details Multi" );
         processInstanceSelected.fire( new ProcessInstanceSelectionEvent( event.getDeploymentId(),
-                event.getProcessInstanceId(), event.getProcessDefId(),
-                event.getProcessDefName(), event.getProcessInstanceStatus() ) );
+                                                                         event.getProcessInstanceId(), event.getProcessDefId(),
+                                                                         event.getProcessDefName(), event.getProcessInstanceStatus() ) );
     }
 
     private class AbortActionHasCell implements HasCell<ProcessInstanceSummary, ProcessInstanceSummary> {
@@ -526,12 +547,15 @@ public class ProcessInstanceListViewImpl extends AbstractMultiGridView<ProcessIn
                                    Delegate<ProcessInstanceSummary> delegate ) {
             cell = new ActionCell<ProcessInstanceSummary>( text, delegate ) {
                 @Override
-                public void render( Cell.Context context,
+                public void render( Context context,
                                     ProcessInstanceSummary value,
                                     SafeHtmlBuilder sb ) {
                     if ( value.getState() == ProcessInstance.STATE_ACTIVE ) {
                         SafeHtmlBuilder mysb = new SafeHtmlBuilder();
-                        mysb.appendHtmlConstant("<a href='javascript:;' class='btn btn-mini' style='margin-right:5px;' title='"+constants.Abort()+"'>"+constants.Abort()+"</a>&nbsp;");
+                        mysb.appendHtmlConstant( new Button( constants.Abort() ) {{
+                            setSize( ButtonSize.SMALL );
+                            getElement().getStyle().setMarginRight( 5, Style.Unit.PX );
+                        }}.getElement().toString() );
                         sb.append( mysb.toSafeHtml() );
                     }
                 }
@@ -567,7 +591,10 @@ public class ProcessInstanceListViewImpl extends AbstractMultiGridView<ProcessIn
                                     SafeHtmlBuilder sb ) {
                     if ( value.getState() == ProcessInstance.STATE_ACTIVE ) {
                         SafeHtmlBuilder mysb = new SafeHtmlBuilder();
-                        mysb.appendHtmlConstant("<a href='javascript:;' class='btn btn-mini' style='margin-right:5px;' title='"+constants.Signal()+"'>"+constants.Signal()+"</a>");
+                        mysb.appendHtmlConstant( new Button( constants.Signal() ) {{
+                            setSize( ButtonSize.SMALL );
+                            getElement().getStyle().setMarginRight( 5, Style.Unit.PX );
+                        }}.getElement().toString() );
                         sb.append( mysb.toSafeHtml() );
                     }
                 }
@@ -596,61 +623,68 @@ public class ProcessInstanceListViewImpl extends AbstractMultiGridView<ProcessIn
         }
     }
 
-    public void initDefaultFilters(GridGlobalPreferences preferences ,Button createTabButton){
+    public void initDefaultFilters( GridGlobalPreferences preferences,
+                                    Button createTabButton ) {
 
-        List<String> states =  new ArrayList<String>();
-
+        List<String> states = new ArrayList<String>();
+        presenter.setAddingDefaultFilters( true );
         //Filter status Active
-        states.add(String.valueOf( ProcessInstance.STATE_ACTIVE) );
-        initTabFilter( preferences, "ProcessInstancesGrid_0", Constants.INSTANCE.Active(), "Filter " + Constants.INSTANCE.Active(), states,"","" );
+        states.add( String.valueOf( ProcessInstance.STATE_ACTIVE ) );
+        initTabFilter( preferences, "ProcessInstancesGrid_0", Constants.INSTANCE.Active(), "Filter " + Constants.INSTANCE.Active(), states, "", "" );
 
         //Filter status completed
-        states =  new ArrayList<String>();
+        states = new ArrayList<String>();
         states.add( String.valueOf( ProcessInstance.STATE_COMPLETED ) );
         initTabFilter( preferences, "ProcessInstancesGrid_1", Constants.INSTANCE.Completed(), "Filter " + Constants.INSTANCE.Completed(), states, "", "" );
 
         filterPagedTable.addAddTableButton( createTabButton );
+        presenter.setAddingDefaultFilters( false );
         applyFilterOnPresenter( "ProcessInstancesGrid_1" );
 
     }
-    private void initTabFilter(GridGlobalPreferences preferences, final String key, String tabName,
-                               String tabDesc, List<String> states, String processDefinition,String initiator) {
-        HashMap<String, Object> tabSettingsValues = new HashMap<String, Object>(  );
 
-        tabSettingsValues.put( NewTabFilterPopup.FILTER_TAB_NAME_PARAM,tabName);
-        tabSettingsValues.put( NewTabFilterPopup.FILTER_TAB_DESC_PARAM, tabDesc);
+    private void initTabFilter( GridGlobalPreferences preferences,
+                                final String key,
+                                String tabName,
+                                String tabDesc,
+                                List<String> states,
+                                String processDefinition,
+                                String initiator ) {
+        HashMap<String, Object> tabSettingsValues = new HashMap<String, Object>();
+
+        tabSettingsValues.put( NewTabFilterPopup.FILTER_TAB_NAME_PARAM, tabName );
+        tabSettingsValues.put( NewTabFilterPopup.FILTER_TAB_DESC_PARAM, tabDesc );
         tabSettingsValues.put( ProcessInstanceListPresenter.FILTER_STATE_PARAM_NAME, states );
         tabSettingsValues.put( ProcessInstanceListPresenter.FILTER_PROCESS_DEFINITION_PARAM_NAME, processDefinition );
         tabSettingsValues.put( ProcessInstanceListPresenter.FILTER_INITIATOR_PARAM_NAME, initiator );
 
         filterPagedTable.saveNewTabSettings( key, tabSettingsValues );
 
-        final ExtendedPagedTable<ProcessInstanceSummary> extendedPagedTable = createGridInstance(  new GridGlobalPreferences( key, preferences.getInitialColumns(), preferences.getBannedColumns()), key );
+        final ExtendedPagedTable<ProcessInstanceSummary> extendedPagedTable = createGridInstance( new GridGlobalPreferences( key, preferences.getInitialColumns(), preferences.getBannedColumns() ), key );
         currentListGrid = extendedPagedTable;
-        presenter.addDataDisplay( extendedPagedTable );
         extendedPagedTable.setDataProvider( presenter.getDataProvider() );
         filterPagedTable.addTab( extendedPagedTable, key, new Command() {
             @Override
             public void execute() {
                 currentListGrid = extendedPagedTable;
-                applyFilterOnPresenter( key  );
+                applyFilterOnPresenter( key );
             }
-        } ) ;
+        } );
     }
 
-    public void applyFilterOnPresenter( HashMap<String, Object> params){
-        List<String> states = ( List ) params.get( ProcessInstanceListPresenter.FILTER_STATE_PARAM_NAME );
+    public void applyFilterOnPresenter( HashMap<String, Object> params ) {
+        List<String> states = (List) params.get( ProcessInstanceListPresenter.FILTER_STATE_PARAM_NAME );
         ArrayList<Integer> statesInteger = new ArrayList<Integer>();
         for ( String state : states ) {
             statesInteger.add( Integer.parseInt( state ) );
         }
-        presenter.filterGrid( statesInteger, ( String ) params.get( ProcessInstanceListPresenter.FILTER_PROCESS_DEFINITION_PARAM_NAME ),
-                ( String ) params.get( ProcessInstanceListPresenter.FILTER_INITIATOR_PARAM_NAME ));
+        presenter.filterGrid( statesInteger, (String) params.get( ProcessInstanceListPresenter.FILTER_PROCESS_DEFINITION_PARAM_NAME ),
+                              (String) params.get( ProcessInstanceListPresenter.FILTER_INITIATOR_PARAM_NAME ) );
     }
-    public void applyFilterOnPresenter(String key) {
+
+    public void applyFilterOnPresenter( String key ) {
         initSelectionModel();
         applyFilterOnPresenter( filterPagedTable.getMultiGridPreferencesStore().getGridSettings( key ) );
     }
-
 
 }

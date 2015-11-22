@@ -15,8 +15,6 @@
  */
 package org.jbpm.console.ng.gc.client.list.base;
 
-import com.github.gwtbootstrap.client.ui.Button;
-import com.github.gwtbootstrap.client.ui.constants.IconType;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.cellview.client.Column;
@@ -26,6 +24,8 @@ import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.RequiresResize;
 import com.google.gwt.view.client.DefaultSelectionEventManager;
 import com.google.gwt.view.client.NoSelectionModel;
+import org.gwtbootstrap3.client.ui.Button;
+import org.gwtbootstrap3.client.ui.constants.IconType;
 import org.jboss.errai.common.client.api.Caller;
 import org.jboss.errai.common.client.api.RemoteCallback;
 import org.jboss.errai.security.shared.api.identity.User;
@@ -106,7 +106,7 @@ public abstract class AbstractListView<T extends GenericSummary, V extends Abstr
 
     }
 
-    public void init( V presenter,
+    public void init( final V presenter,
                       final GridGlobalPreferences preferences ) {
         this.presenter = presenter;
         
@@ -125,7 +125,8 @@ public abstract class AbstractListView<T extends GenericSummary, V extends Abstr
                 } else {
                     listGrid.setGridPreferencesStore( preferencesStore );
                 }
-                initColumns();
+                presenter.onGridPreferencesStoreLoaded();
+                initColumns(listGrid);
                 initGenericToolBar();
                 listGrid.loadPageSizePreferences();
             }
@@ -174,6 +175,6 @@ public abstract class AbstractListView<T extends GenericSummary, V extends Abstr
      * For each specific implementation define the
      *  DataGrid columns and how they must be initialized
      */
-    public abstract void initColumns();
+    public abstract void initColumns(ExtendedPagedTable<T> extendedPagedTable);
 
 }

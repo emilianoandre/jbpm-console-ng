@@ -21,7 +21,7 @@
   <parent>
     <groupId>org.jbpm</groupId>
     <artifactId>jbpm-console-ng-generic</artifactId>
-    <version>6.3.0-SNAPSHOT</version>
+    <version>6.4.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>jbpm-console-ng-data-filters-client</artifactId>
@@ -33,8 +33,12 @@
   <dependencies>
 
     <dependency>
-      <groupId>com.github.gwtbootstrap</groupId>
-      <artifactId>gwt-bootstrap</artifactId>
+      <groupId>org.gwtbootstrap3</groupId>
+      <artifactId>gwtbootstrap3</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gwtbootstrap3</groupId>
+      <artifactId>gwtbootstrap3-extras</artifactId>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>
@@ -105,6 +109,11 @@
 
     <dependency>
       <groupId>org.dashbuilder</groupId>
+      <artifactId>dashbuilder-json</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.dashbuilder</groupId>
       <artifactId>dashbuilder-dataset-shared</artifactId>
     </dependency>
 
@@ -130,6 +139,14 @@
       <groupId>com.google.gwt</groupId>
       <artifactId>gwt-user</artifactId>
       <scope>provided</scope>
+    </dependency>
+
+    <!-- test -->
+
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
     </dependency>
 
   </dependencies>

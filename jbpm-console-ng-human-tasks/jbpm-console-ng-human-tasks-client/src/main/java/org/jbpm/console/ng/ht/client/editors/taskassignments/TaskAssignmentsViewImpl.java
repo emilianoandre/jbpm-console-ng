@@ -13,24 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.jbpm.console.ng.ht.client.editors.taskassignments;
-
-import com.github.gwtbootstrap.client.ui.*;
 
 import javax.enterprise.context.Dependent;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
 
-import com.github.gwtbootstrap.client.ui.constants.ControlGroupType;
-import com.github.gwtbootstrap.client.ui.constants.IconType;
-import com.github.gwtbootstrap.client.ui.constants.LabelType;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.HTMLPanel;
+import org.gwtbootstrap3.client.ui.Button;
+import org.gwtbootstrap3.client.ui.FormControlStatic;
+import org.gwtbootstrap3.client.ui.FormLabel;
+import org.gwtbootstrap3.client.ui.HelpBlock;
+import org.gwtbootstrap3.client.ui.TextBox;
 import org.jboss.errai.ui.shared.api.annotations.DataField;
 import org.jboss.errai.ui.shared.api.annotations.EventHandler;
 import org.jboss.errai.ui.shared.api.annotations.Templated;
@@ -45,29 +41,23 @@ public class TaskAssignmentsViewImpl extends Composite implements TaskAssignment
 
     @Inject
     @DataField
-    public ControlLabel detailsAccordionLabel;
-
+    public FormLabel userOrGroupLabel;
 
     @Inject
     @DataField
-    public Label userOrGroupLabel;
-    
-    @Inject
-    @DataField
-    public Label usersGroupsControlsLabel;
+    public FormLabel usersGroupsControlsLabel;
 
     @Inject
     @DataField
     public TextBox userOrGroupText;
-    
+
     @Inject
     @DataField
     public Button delegateButton;
 
     @Inject
     @DataField
-    public Label usersGroupsControlsPanel;
-
+    public FormControlStatic usersGroupsControlsPanel;
 
     @Inject
     @DataField
@@ -76,54 +66,56 @@ public class TaskAssignmentsViewImpl extends Composite implements TaskAssignment
     @Inject
     private Event<NotificationEvent> notification;
 
-    private Constants constants = GWT.create( Constants.class );
+    private Constants constants = GWT.create(Constants.class);
 
     @Override
-    public void init( TaskAssignmentsPresenter presenter ) {
+    public void init(TaskAssignmentsPresenter presenter) {
         this.presenter = presenter;
 
         userOrGroupLabel.setText(constants.Delegate_User());
-        detailsAccordionLabel.add( new HTMLPanel( constants.Details() ) );
-        delegateButton.setText( constants.Delegate() );
+        delegateButton.setText(constants.Delegate());
         usersGroupsControlsLabel.setText(constants.Potential_Owners());
-        usersGroupsControlsPanel.setStyleName( "" );
-        userOrGroupHelpBlock.setText( "" );
+        userOrGroupHelpBlock.setText("");
     }
 
     @EventHandler("delegateButton")
-    public void delegateButton( ClickEvent e ) {
+    public void delegateButton(ClickEvent e) {
         String userOrGroup = userOrGroupText.getText();
-        if(userOrGroup.equals("")){
-            userOrGroupHelpBlock.setText( Constants.INSTANCE.DelegationUserInputRequired() );
-        }else {
-            presenter.delegateTask( userOrGroup);
-        }
+        presenter.delegateTask(userOrGroup);
     }
 
     @Override
-    public Label getUsersGroupsControlsPanel() {
-        return usersGroupsControlsPanel;
+    public void setPotentialOwnersInfo(String info) {
+        usersGroupsControlsPanel.setText(info);
     }
 
     @Override
-    public void displayNotification( String text ) {
-        notification.fire( new NotificationEvent( text ) );
+    public void displayNotification(String text) {
+        notification.fire(new NotificationEvent(text));
     }
 
     @Override
-    public Button getDelegateButton(){
-        return delegateButton;
-    }
-    
-    @Override
-    public TextBox getUserOrGroupText() {
-        return userOrGroupText;
+    public void clearUserOrGroupInput() {
+        userOrGroupText.clear();
     }
 
     @Override
-    public HelpBlock getUserOrGroupHelpBlock() {
-        return userOrGroupHelpBlock;
+    public void setHelpText(String text) {
+        userOrGroupHelpBlock.setText(text);
     }
 
+    @Override
+    public void enableDelegateButton(boolean enable) {
+        delegateButton.setEnabled(enable);
+    }
 
+    @Override
+    public void enableUserOrGroupInput(boolean enable) {
+        userOrGroupText.setEnabled(enable);
+    }
+
+    @Override
+    public void setDelegateButtonActive(boolean enable) {
+        delegateButton.setActive(enable);
+    }
 }

@@ -259,6 +259,13 @@ public class ShowcaseEntryPoint {
             }
         } ).endMenu().build().getItems().get( 0 ) );
 
+        result.add( MenuFactory.newSimpleItem( "Issue Tracker" ).respondsWith( new Command() {
+            @Override
+            public void execute() {
+                placeManager.goTo( new DefaultPlaceRequest( "Issue Tracker Perspective" ) );
+            }
+        } ).endMenu().build().getItems().get( 0 ) );
+        
         return result;
     }
 

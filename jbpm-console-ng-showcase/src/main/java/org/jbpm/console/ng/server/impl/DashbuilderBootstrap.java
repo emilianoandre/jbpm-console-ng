@@ -122,7 +122,7 @@ public class DashbuilderBootstrap {
                         + "from AuditTaskImpl t, "
                         + "PeopleAssignments_PotOwners po, "
                         + "OrganizationalEntity oe "
-                        + "where t.id = po.task_id and po.entity_id = oe.id", false )
+                        + "where t.taskId = po.task_id and po.entity_id = oe.id", false )
                 .date(DataSetTasksListGridViewImpl.COLUMN_ACTIVATIONTIME)
                 .label(DataSetTasksListGridViewImpl.COLUMN_ACTUALOWNER)
                 .label(DataSetTasksListGridViewImpl.COLUMN_CREATEDBY)
@@ -153,7 +153,7 @@ public class DashbuilderBootstrap {
                         + "from AuditTaskImpl t, "
                         + "PeopleAssignments_BAs bas, "
                         + "OrganizationalEntity oe "
-                        + "where t.id = bas.task_id and bas.entity_id = oe.id", false)
+                        + "where t.taskId = bas.task_id and bas.entity_id = oe.id", false)
                 .date(DataSetTasksListGridViewImpl.COLUMN_ACTIVATIONTIME)
                 .label(DataSetTasksListGridViewImpl.COLUMN_ACTUALOWNER)
                 .label(DataSetTasksListGridViewImpl.COLUMN_CREATEDBY)
@@ -195,7 +195,7 @@ public class DashbuilderBootstrap {
                         "       v.id varid,\n" +
                         "       v.variableId varname,\n" +
                         "       v.value varvalue\n" +
-                        "from ProcessInstancelog pil\n" +
+                        "from ProcessInstanceLog pil\n" +
                         "  inner join (select vil.processInstanceId ,vil.variableId, MAX(vil.ID) maxvilid  FROM VariableInstanceLog vil\n" +
                         "  GROUP BY vil.processInstanceId, vil.variableId)  x\n" +
                         "    on (x.processInstanceId =pil.processInstanceId)\n" +
@@ -219,10 +219,10 @@ public class DashbuilderBootstrap {
                 .uuid(TASKS_MONITORING_DATASET)
                 .name("Tasks monitoring")
                 .dataSource(jbpmDatasource)
-                .dbSQL("select p.processname, t.* " +
-                        "from processinstancelog p " +
-                        "inner join bamtasksummary t on (t.processinstanceid = p.processinstanceid) " +
-                        "inner join (select min(pk) pk from bamtasksummary group by taskid) d on t.pk=d.pk",
+                .dbSQL("select p.processName, t.* " +
+                        "from ProcessInstanceLog p " +
+                        "inner join BAMTaskSummary t on (t.processInstanceId = p.processInstanceId) " +
+                        "inner join (select min(pk) pk from BAMTaskSummary group by taskId) d on t.pk=d.pk",
                         true)
                 .buildDef();
 
